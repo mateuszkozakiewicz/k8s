@@ -1,0 +1,43 @@
+language: generic
+sudo: required
+services:
+  - docker
+cache:
+  directories:
+    - "$HOME/google-cloud-sdk/"
+
+env:
+  global:
+    - DOCKER_COMPOSE_VERSION=1.25.3
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
+before_script:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+before_deploy:
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+    export ENV=k8s-app-prod;
+    else
+    export ENV=k8s-app-staging;
+    fi
+  - gcloud version || true
+  - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash > /dev/null; fi
+  - source $HOME/google-cloud-sdk/path.bash.inc
+
+script:
+  - docker-compose build
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: ./scripts/deploy.sh
+    on:
+      tags: true
+
+addons:
+  apt:
+    packages:
+      - docker-ce
