@@ -17,9 +17,12 @@ spec:
       containers:
         - name: backend
           imagePullPolicy: Always
-          image: gcr.io/k8s-free/backend
+          image: gcr.io/k8s-free/backend:0.1.2
           ports:
             - containerPort: 4000
+          envFrom:
+            - secretRef:
+                name: postgres-secret
           resources:
             requests:
               memory: "32Mi"
@@ -40,3 +43,25 @@ spec:
       port: 4000
       targetPort: 4000
       name: http
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgresql
+spec:
+  type: ExternalName
+  externalName: postgresql.postgresql.svc.cluster.local
+  ports:
+    - port: 5432
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+data:
+  POSTGRES_DB: { { REPLACE } }
+  POSTGRES_USER: { { REPLACE } }
+  POSTGRES_PASSWORD: { { REPLACE } }
+  POSTGRES_HOST: { { REPLACE } }
+  POSTGRES_PORT: { { REPLACE } }

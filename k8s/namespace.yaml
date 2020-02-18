@@ -11,3 +11,10 @@ metadata:
   name: k8s-app-prod
   labels:
     name: k8s-app-prod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: postgresql
+  labels:
+    name: postgresql
